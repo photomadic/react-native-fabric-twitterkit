@@ -173,6 +173,34 @@ RCT_EXPORT_METHOD(composeTweet:(NSDictionary *)options :(RCTResponseSenderBlock)
     }];
 }
 
+RCT_EXPORT_METHOD(api:(NSString *)endpoint withMethod:(NSString *)method parameters:(NSDictionary *)options :(RCTResponseSenderBlock)callback)
+{
+    NSError *clientError;
+    TWTRAPIClient *client = [TWTRAPIClient clientWithCurrentUser];
+    NSURLRequest *request = [client URLRequestWithMethod:method URL:endpoint parameters:options error:&clientError];
+    if (request) {
+        [client sendTwitterRequest:request completion:^(NSURLResponse *response, NSData *data, NSError *connectionError) {
+            if (data) {
+                // handle the response data e.g.
+                NSError *jsonError;
+                NSDictionary *json = [NSJSONSerialization
+                                      JSONObjectWithData:data
+                                      options:0
+                                      error:&jsonError];
+                NSLog(@"%@",[json description]);
+                callback(@[[NSNull null], json]);
+            }
+            else {
+                NSLog(@"Error code: %ld | Error description: %@", (long)[connectionError code], [connectionError localizedDescription]);
+                callback(@[[connectionError localizedDescription]]);
+            }
+        }];
+    }
+    else {
+        NSLog(@"Error: %@", clientError);
+    }
+}
+
 RCT_EXPORT_METHOD(logOut)
 {
     TWTRSessionStore *store = [[Twitter sharedInstance] sessionStore];

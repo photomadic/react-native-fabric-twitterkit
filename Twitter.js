@@ -20,6 +20,9 @@ module.exports = {
   fetchTweet: function (options, cb) {
     SMXTwitter.fetchTweet(options, cb);
   },
+  api: function(endpoint, method, parameters, cb) {
+    SMXTwitter.api(endpoint, method, parameters, cb);
+  },
   logOut: function () {
     SMXTwitter.logOut();
   },
