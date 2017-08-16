@@ -23,18 +23,23 @@ RCT_EXPORT_MODULE();
 
 RCT_EXPORT_METHOD(login:(RCTResponseSenderBlock)callback)
 {
-    [[Twitter sharedInstance] logInWithMethods:TWTRLoginMethodWebBased completion:^(TWTRSession *session, NSError *error) {
-        if (session) {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [[Twitter sharedInstance] logInWithMethods:TWTRLoginMethodWebBased completion:^(TWTRSession *session, NSError *error) {
+            NSLog(@"%@", session);
+            if (!session) {
+                NSLog(@"error: %@", [error localizedDescription]);
+                callback(@[[error localizedDescription]]);
+                return;
+            }
+
             NSDictionary *body = @{@"authToken": session.authToken,
                                    @"authTokenSecret": session.authTokenSecret,
                                    @"userID":session.userID,
                                    @"userName":session.userName};
+
             callback(@[[NSNull null], body]);
-        } else {
-            NSLog(@"error: %@", [error localizedDescription]);
-            callback(@[[error localizedDescription]]);
-        }
-    }];
+         }];
+    });
 }
 
 RCT_EXPORT_METHOD(fetchProfile:(RCTResponseSenderBlock)callback)
@@ -203,16 +208,11 @@ RCT_EXPORT_METHOD(api:(NSString *)endpoint withMethod:(NSString *)method paramet
 
 RCT_EXPORT_METHOD(logOut)
 {
-    TWTRSessionStore *store = [[Twitter sharedInstance] sessionStore];
-    NSString *userID = store.session.userID;
-
-    [store logOutUserID:userID];
-}
-
-
-- (dispatch_queue_t)methodQueue
-{
-    return dispatch_get_main_queue();
+    dispatch_async(dispatch_get_main_queue(), ^{
+        TWTRSessionStore *store = [[Twitter sharedInstance] sessionStore];
+        NSString *userID = store.session.userID;
+        [store logOutUserID:userID];
+    });
 }
 
 @end
